@@ -47,6 +47,22 @@ class Author:
     name: str
 ```
 
+### Add a Suffix to Generated Models/Types
+
+Option: `output_models_suffix`
+
+By default, generated models and query-specific types keep their standard names (`Author`, `GetAuthorRow`, `CreateAuthorParams`, etc). If you want to avoid naming collisions with existing application types, you can add a suffix.
+
+with `output_models_suffix: DTO`
+
+```py
+class AuthorDTO:
+    ...
+
+class CreateAuthorParamsDTO:
+    ...
+```
+
 ### Use `enum.StrEnum` for Enums
 
 Option: `emit_str_enum`
