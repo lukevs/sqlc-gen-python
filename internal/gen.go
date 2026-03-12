@@ -207,6 +207,13 @@ func modelName(name string, settings *plugin.Settings) string {
 	return out
 }
 
+func withSuffix(name, suffix string) string {
+	if suffix == "" {
+		return name
+	}
+	return name + suffix
+}
+
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
@@ -226,7 +233,7 @@ func pyEnumValueName(value string) string {
 	return strings.ToUpper(id)
 }
 
-func buildEnums(req *plugin.GenerateRequest) []Enum {
+func buildEnums(conf Config, req *plugin.GenerateRequest) []Enum {
 	var enums []Enum
 	for _, schema := range req.Catalog.Schemas {
 		if schema.Name == "pg_catalog" || schema.Name == "information_schema" {
@@ -240,7 +247,7 @@ func buildEnums(req *plugin.GenerateRequest) []Enum {
 				enumName = schema.Name + "_" + enum.Name
 			}
 			e := Enum{
-				Name:    modelName(enumName, req.Settings),
+				Name:    withSuffix(modelName(enumName, req.Settings), conf.OutputModelsSuffix),
 				Comment: enum.Comment,
 			}
 			for _, v := range enum.Vals {
@@ -281,7 +288,7 @@ func buildModels(conf Config, req *plugin.GenerateRequest) []Struct {
 			}
 			s := Struct{
 				Table:   plugin.Identifier{Schema: schema.Name, Name: table.Rel.Name},
-				Name:    modelName(structName, req.Settings),
+				Name:    withSuffix(modelName(structName, req.Settings), conf.OutputModelsSuffix),
 				Comment: table.Comment,
 			}
 			for _, column := range table.Columns {
@@ -406,7 +413,7 @@ func buildQueries(conf Config, req *plugin.GenerateRequest, structs []Struct) ([
 			gq.Args = []QueryValue{{
 				Emit:   true,
 				Name:   "arg",
-				Struct: columnsToStruct(req, query.Name+"Params", cols),
+				Struct: columnsToStruct(req, withSuffix(query.Name+"Params", conf.OutputModelsSuffix), cols),
 			}}
 		} else {
 			args := make([]QueryValue, 0, len(query.Params))
@@ -461,7 +468,7 @@ func buildQueries(conf Config, req *plugin.GenerateRequest, structs []Struct) ([
 						Column: c,
 					})
 				}
-				gs = columnsToStruct(req, query.Name+"Row", columns)
+				gs = columnsToStruct(req, withSuffix(query.Name+"Row", conf.OutputModelsSuffix), columns)
 				emit = true
 			}
 			gq.Ret = QueryValue{
@@ -1089,7 +1096,7 @@ func Generate(_ context.Context, req *plugin.GenerateRequest) (*plugin.GenerateR
 		}
 	}
 
-	enums := buildEnums(req)
+	enums := buildEnums(conf, req)
 	models := buildModels(conf, req)
 	queries, err := buildQueries(conf, req, models)
 	if err != nil {
