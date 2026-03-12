@@ -22,7 +22,7 @@ class DeleteBarByIDAndNameParamsDTO:
 
 
 GET_BAR = """-- name: get_bar \\:one
-SELECT * FROM bar WHERE id = :p1 LIMIT 1
+SELECT id, name FROM bar WHERE id = :p1 LIMIT 1
 """
 
 
